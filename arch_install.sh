@@ -25,8 +25,8 @@ DRIVE='/dev/sda'
 # Hostname of the installed machine.
 HOSTNAME='arch'
 
-# Encrypt everything (except /boot).  Leave blank to disable.
-ENCRYPT_DRIVE='TRUE'
+# Encrypt everything (except /boot).  Leave blank to disable.was 'TRUE'
+ENCRYPT_DRIVE=''
 
 # Passphrase used to encrypt the drive (leave blank to be prompted).
 DRIVE_PASSPHRASE=''
@@ -60,8 +60,8 @@ VIDEO_DRIVER="i915"
 # For generic stuff
 #VIDEO_DRIVER="vesa"
 
-# Wireless device, leave blank to not use wireless and use DHCP instead.
-WIRELESS_DEVICE="wlan0"
+# Wireless device, leave blank to not use wireless and use DHCP instead.was "wlan0"
+WIRELESS_DEVICE=""
 # For tc4200's
 #WIRELESS_DEVICE="eth1"
 
