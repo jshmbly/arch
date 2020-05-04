@@ -22,13 +22,13 @@ ENCRYPT_DRIVE=''
 DRIVE_PASSPHRASE=''
 
 # Root password (leave blank to be prompted).
-ROOT_PASSWORD='rootpass'
+ROOT_PASSWORD='1234'
 
 # Main user to create (by default, added to wheel group, and others). (leave blank to be prompted)
-USER_NAME='justin'
+USER_NAME='user'
 
 # The main user's password (leave blank to be prompted).
-USER_PASSWORD='password'
+USER_PASSWORD='1234'
 
 # System timezone.
 TIMEZONE='US/Eastern'
@@ -55,15 +55,15 @@ WIRELESS_DEVICE=""
 #WIRELESS_DEVICE="eth1"
 
 # DETECT
-    [ -d /sys/firmware/efi ] && BOOT='UEFI' && echo "UEFI Boot Detected" && echo || BOOT=BIOS && echo "BIOS Boot Detected" && echo
+    #[ -d /sys/firmware/efi ] && BOOT='UEFI' && echo "UEFI Boot Detected" && echo || BOOT=BIOS && echo "BIOS Boot Detected" && echo
 
-    [ -z "$MODEL" ] && set MODEL=$( cat /sys/devices/virtual/dmi/id/product_name ) && echo "Computer Model detected as: $MODEL" && echo || echo "Computer Model detected as: $MODEL" && echo
+    #[ -z "$MODEL" ] && set MODEL=$( cat /sys/devices/virtual/dmi/id/product_name ) && echo "Computer Model detected as: $MODEL" && echo || echo "Computer Model detected as: $MODEL" && echo
 
 # MODEL Specific settings
 
-    [ $MODEL == 'T420s' ] &&HOSTNAME='thinkpad-arch' && WIRELESS_DEVICE='wlp3s0' && KEYMAP='US' && VIDEO_DRIVER='nvidia-390xx' && LAPTOP='TRUE' && MODEL_PACKAGES='bumblebee lib32-virtualgl lib32-nvidia-340xx-utils bbswitch'
-    [ $MODEL == 'HP ZBook 14u G5' ] && HOSTNAME='zbook-arch' && WIRELESS_DEVICE='wlp3s0' && KEYMAP='US' && VIDEO_DRIVER='vulkan-intel' && LAPTOP='TRUE' && MODEL_PACKAGES='bolt'
-    [ $MODEL == 'Z97X-UD5H-BK' ] && HOSTNAME='phantom-arch' && WIRELESS_DEVICE='' && KEYMAP='US' && VIDEO_DRIVER='nvidia' && LAPTOP='TRUE' MODEL_PACKAGES=''
+    #[ $MODEL == 'T420s' ] &&HOSTNAME='thinkpad-arch' && WIRELESS_DEVICE='wlp3s0' && KEYMAP='US' && VIDEO_DRIVER='nvidia-390xx' && LAPTOP='TRUE' && MODEL_PACKAGES='bumblebee lib32-virtualgl lib32-nvidia-340xx-utils bbswitch'
+    #[ $MODEL == 'HP ZBook 14u G5' ] && HOSTNAME='zbook-arch' && WIRELESS_DEVICE='wlp3s0' && KEYMAP='US' && VIDEO_DRIVER='vulkan-intel' && LAPTOP='TRUE' && MODEL_PACKAGES='bolt'
+    #[ $MODEL == 'Z97X-UD5H-BK' ] && HOSTNAME='phantom-arch' && WIRELESS_DEVICE='' && KEYMAP='US' && VIDEO_DRIVER='nvidia' && LAPTOP='TRUE' MODEL_PACKAGES=''
 
 # PROMPT
     [ -z "$DRIVE" ] && echo "Enter the drive to install ArchLinux to ( e.g. /dev/sda ):" && lsblk -d | awk '{print "/dev/" $1}' | grep 'sd\|hd\|vd\|nvme\|mmcblk' && stty -echo && read DRIVE && stty echo && echo "Installing to $DRIVE" && echo || echo "Installing ArchLinux to $DRIVE" && echo
@@ -218,7 +218,7 @@ pacstrap /mnt base linux-headers base-devel btrfs-progs sudo grub efibootmgr dos
 
     # Install Packages
         # Utilities
-        arch-chroot "pacman -S --noconfirm catfish cmatrix irssi curl fish aspell-en lsd gvim ntp openssh p7zip pkgfile python rfkill unrar unzip wget zip systemd-sysvcompat zsh grml-zsh-config apparmor vifm ranger vlc feh gpicview-gtk3 gimp cmus clementine handbrake handbrake-cli termite libreoffice-fresh hunspell hyphen-en mythes-en code neofetch libqalculate bleachbit"
+        arch-chroot "pacman -S --noconfirm catfish cmatrix irssi curl fish aspell-en lsd gvim ntp openssh p7zip pkgfile python rfkill unrar unzip wget zip systemd-sysvcompat zsh grml-zsh-config apparmor vifm ranger vlc feh gpicview-gtk3"
         arch-chroot "systemctl enable apparmor.service"
 
         # Video Drivers
@@ -231,21 +231,21 @@ pacstrap /mnt base linux-headers base-devel btrfs-progs sudo grub efibootmgr dos
 
         # GUI
         arch-chroot "pacman -S --noconfirm xorg"
-        arch-chroot "pacman -S --noconfirm network-manager-applet nm-connection-editor qtile dmenu rofi budgie-desktop gnome dconf dconf-editor lightdm lightdm-gtk-greeter pavucontrol pasystray awesome-terminal-fonts xautolock i3lock scrot imagemagick compton galculator qalculate-gtk gnome-screenshot adapta-gtk-theme papirus-icon-theme"
+        arch-chroot "pacman -S --noconfirm network-manager-applet nm-connection-editor budgie-desktop gnome dconf dconf-editor lightdm lightdm-gtk-greeter"
         arch-chroot "pacman -R --noconfirm epiphany"
         arch-chroot "config_xinitrc "export XDG_CURRENT_DESKTOP=Budgie:GNOME \n budgie-desktop""
         arch-chroot "systemctl enable lightdm.service"
 
         # Internet
-        arch-chroot "pacman -S --noconfirm lynx firefox chromium qbittorrent neomutt geary newsboat feedreader"
+        arch-chroot "pacman -S --noconfirm firefox"
 
         # Games
-        arch-chroot "pacman -S --noconfirm steam lutris"
+        #arch-chroot "pacman -S --noconfirm steam lutris"
 
 
         # Laptop Packages
-        [ $LAPTOP = 'TRUE' ] && arch-chroot "pacman -S --noconfirm tlp tlp-rdw" && arch-chroot "systemctl enable tlp.service" && arch-chroot "systemctl enable tlp-sleep.service" && arch-chroot "systemctl enable NetworkManager-dispatcher.service" && arch-chroot "systemctl mask systemd-rfkill.service" && arch-chroot "systemctl mask systemd-rfkill.socket"
-        [ $MODEL = 'T420s' ] echo -e "SATA_LINKPWR_ON_BAT=max_performance" >> /mnt/etc/default/tlp
+        #[ $LAPTOP = 'TRUE' ] && arch-chroot "pacman -S --noconfirm tlp tlp-rdw" && arch-chroot "systemctl enable tlp.service" && arch-chroot "systemctl enable tlp-sleep.service" && arch-chroot "systemctl enable NetworkManager-dispatcher.service" && arch-chroot "systemctl mask systemd-rfkill.service" && arch-chroot "systemctl mask systemd-rfkill.socket"
+        #[ $MODEL = 'T420s' ] echo -e "SATA_LINKPWR_ON_BAT=max_performance" >> /mnt/etc/default/tlp
 
         # Sound
         arch-chroot "pacman -S --noconfirm alsa-utils alsa-plugins pulseaudio pulseaudio-alsa"
@@ -256,8 +256,8 @@ pacstrap /mnt base linux-headers base-devel btrfs-progs sudo grub efibootmgr dos
     arch-chroot "cd yay"
     arch-chroot "sudo -u $USER_NAME makepkg -si"
 
-    arch-chroot "yay -Syy --noconfirm tlpui-git snapd etcher-bin vscodium-bin linux-steam-integration"
+    #arch-chroot "yay -Syy --noconfirm tlpui-git snapd etcher-bin vscodium-bin linux-steam-integration"
 
-    arch-chroot "sudo snap install pick-colour-picker snap-store"
+    #arch-chroot "sudo snap install pick-colour-picker snap-store"
 
     systemctl reboot
