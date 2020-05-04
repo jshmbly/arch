@@ -314,12 +314,12 @@ install_packages() {
     packages+=' mate-polkit'
 
     # Fonts
-    packages+=' ttf-dejavu ttf-liberation terminus-font'# ttf-font-awesome ttf-ubuntu-font-family'
-
-    # note: net-tools depracated so removed from list above and replaced with iproute2 (which should be part of base)
+    packages+=' ttf-dejavu ttf-liberation terminus-font'
+    # ttf-font-awesome ttf-ubuntu-font-family'
 
     # Development packages
-    packages+=' cmake wget curl git' # diffutils gdb tcpdump valgrind wireshark-qt go'
+    packages+=' cmake wget curl git'
+    # diffutils gdb tcpdump valgrind wireshark-qt go'
 
     # Netcfg
     packages+=' dhcpcd networkmanager nm-connection-editor network-manager-applet iputils iproute2'
