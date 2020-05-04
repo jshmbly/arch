@@ -12,7 +12,7 @@ DRIVE='/dev/sda'
 VIRTUALBOX='TRUE'
 
 # Hostname of the installed machine.
-HOSTNAME='host100'
+HOSTNAME='vmhost'
 
 # Encrypt everything (except /boot).  Leave blank to disable.
 ENCRYPT_DRIVE='TRUE'
@@ -30,13 +30,13 @@ USER_NAME='user'
 USER_PASSWORD='a'
 
 # System timezone.
-TIMEZONE='Europe/London'
+TIMEZONE='America/Chicago'
 
 # Have /tmp on a tmpfs or not.  Leave blank to disable.
 # Only leave this blank on systems with very little RAM.
 TMP_ON_TMPFS='TRUE'
 
-KEYMAP='uk'
+KEYMAP='us'
 # KEYMAP='dvorak'
 
 # Choose your video driver
@@ -305,7 +305,7 @@ install_packages() {
     packages+=' libinput xf86-input-libinput'
 
     # General utilities/libraries
-    packages+=' alsa-utils pulseaudio pulseaudio-alsa aspell-en chromium firefox tlp vim ntp openssh p7zip pkgfile python python2 rfkill rsync sudo unrar unzip wget zip zsh grml-zsh-config pinentry mlocate cryptsetup lvm2 cronie man-db man-pages texinfo htop lsof strace screenfetch dunst dex menu-cache youtube-dl ranger gvfs gvfs-smb gvfs-nfs pavucontrol xdg-user-dirs'
+    #packages+=' alsa-utils pulseaudio pulseaudio-alsa aspell-en chromium firefox tlp vim ntp openssh p7zip pkgfile python python2 rfkill rsync sudo unrar unzip wget zip zsh grml-zsh-config pinentry mlocate cryptsetup lvm2 cronie man-db man-pages texinfo htop lsof strace screenfetch dunst dex menu-cache youtube-dl ranger gvfs gvfs-smb gvfs-nfs pavucontrol xdg-user-dirs'
 
     # terminal
     packages+=' termite'
@@ -314,17 +314,17 @@ install_packages() {
     packages+=' mate-polkit'
 
     # Fonts
-    packages+=' ttf-dejavu ttf-liberation terminus-font ttf-font-awesome ttf-ubuntu-font-family'
+    packages+=' ttf-dejavu ttf-liberation terminus-font'# ttf-font-awesome ttf-ubuntu-font-family'
 
     # note: net-tools depracated so removed from list above and replaced with iproute2 (which should be part of base)
 
     # Development packages
-    packages+=' cmake wget curl diffutils gdb git tcpdump valgrind wireshark-qt go'
+    packages+=' cmake wget curl git' # diffutils gdb tcpdump valgrind wireshark-qt go'
 
     # Netcfg
     packages+=' dhcpcd networkmanager nm-connection-editor network-manager-applet iputils iproute2'
     # Wireless
-    packages+=' ifplugd dialog wireless_tools wpa_supplicant'
+    #packages+=' ifplugd dialog wireless_tools wpa_supplicant'
 
     # Java stuff
     #packages+=' icedtea-web-java7 jdk7-openjdk jre7-openjdk'
@@ -337,7 +337,7 @@ install_packages() {
 
 
     # Themeing
-    packages+=' qt5ct lxappearance-gtk3 capitaine-cursors kvantum-qt5 kvantum-theme-arc kvantum-theme-adapta adapta-gtk-theme papirus-icon-theme'
+    #packages+=' qt5ct lxappearance-gtk3 capitaine-cursors kvantum-qt5 kvantum-theme-arc kvantum-theme-adapta adapta-gtk-theme papirus-icon-theme'
 
     # Virtualbox
     if [ -n "$VIRTUALBOX" ]
@@ -421,9 +421,9 @@ set_timezone() {
 }
 
 set_locale() {
-    echo 'LANG="en_GB.UTF-8"' >> /etc/locale.conf
+    echo 'LANG="en_US.UTF-8"' >> /etc/locale.conf
     echo 'LC_COLLATE="C"' >> /etc/locale.conf
-    echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
     locale-gen
 }
 
