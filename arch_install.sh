@@ -1,6 +1,25 @@
 #!/bin/bash
+# Copyright (c) 2012 Tom Wambold
 # 
-# This script will set up an Arch installation with a 100 MB /boot partition
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# This script will set up an Arch installation with a 512 MB /boot partition
 # and an encrypted LVM partition with swap and / inside.  It also installs
 # and configures systemd as the init system (removing sysvinit).
 #
@@ -19,14 +38,14 @@
 ## CONFIGURE THESE VARIABLES
 ## ALSO LOOK AT THE install_packages FUNCTION TO SEE WHAT IS ACTUALLY INSTALLED
 
-# Drive to install to.
-DRIVE='/dev/sda'
+# Drive to install to (leave blank to be prompted).
+DRIVE=''
 
-# Hostname of the installed machine.
-HOSTNAME='arch'
+# Hostname of the installed machine (leave blank to be prompted).
+HOSTNAME=''
 
-# Encrypt everything (except /boot).  Leave blank to disable.was 'TRUE'
-ENCRYPT_DRIVE=''
+# Encrypt everything (except /boot).  Leave blank to disable.
+ENCRYPT_DRIVE='TRUE'
 
 # Passphrase used to encrypt the drive (leave blank to be prompted).
 DRIVE_PASSPHRASE=''
@@ -34,18 +53,14 @@ DRIVE_PASSPHRASE=''
 # Root password (leave blank to be prompted).
 ROOT_PASSWORD=''
 
-# Main user to create (by default, added to wheel group, and others).
-USER_NAME='arc'
+# Main user to create (by default, added to wheel group, and others). (leave blank to be prompted)
+USER_NAME=''
 
 # The main user's password (leave blank to be prompted).
 USER_PASSWORD=''
 
 # System timezone.
-TIMEZONE='America/Chicago'
-
-# Have /tmp on a tmpfs or not.  Leave blank to disable.
-# Only leave this blank on systems with very little RAM.
-TMP_ON_TMPFS='TRUE'
+TIMEZONE='America/New_York'
 
 KEYMAP='us'
 # KEYMAP='dvorak'
@@ -60,10 +75,69 @@ VIDEO_DRIVER="i915"
 # For generic stuff
 #VIDEO_DRIVER="vesa"
 
-# Wireless device, leave blank to not use wireless and use DHCP instead.was "wlan0"
+# Wireless device, leave blank to not use wireless and use DHCP instead.
+#  (leave blank to be prompted)
 WIRELESS_DEVICE=""
 # For tc4200's
 #WIRELESS_DEVICE="eth1"
+
+prompt(){
+    if [ -z "$DRIVE" ]
+    then
+        echo 'Enter the drive to install to:'
+        stty -echo
+        read DRIVE
+        stty echo
+    fi
+    echo "Installing to $DRIVE"
+
+    if [ -z "$HOSTNAME" ]
+    then
+        echo 'Enter the Hostname to set:'
+        stty -echo
+        read HOSTNAME
+        stty echo
+    fi
+    echo "HOSTNAME: $HOSTNAME"
+
+    if [ -z "$ROOT_PASSWORD" ]
+    then
+        echo 'Enter the root password:'
+        stty -echo
+        read ROOT_PASSWORD
+        stty echo
+    fi
+    echo "ROOT_PASSWORD: $ROOT_PASSWORD"
+
+    if [ -z "$USER_NAME" ]
+    then
+        echo 'Enter the desired Username:'
+        stty -echo
+        read USER_NAME
+        stty echo
+    fi
+    echo "USER_NAME: $USER_NAME"
+
+    if [ -z "$USER_PASSWORD" ]
+    then
+        echo 'Enter the users password:'
+        stty -echo
+        read USER_PASSWORD
+        stty echo
+    fi
+    echo "USER_PASSWORD: $USER_PASSWORD"
+
+    if [ -z "$WIRELESS_DEVICE" ]
+    then
+        echo 'Enter the wireless network device to use,'
+        echo ' leave blank to not use wireless and use DHCP instead.'
+        echo ' T420s = wlp3s0'
+        stty -echo
+        read WIRELESS_DEVICE
+        stty echo
+    fi
+    echo "WIRELESS_DEVICE: $WIRELESS_DEVICE"
+}
 
 setup() {
     local boot_dev="$DRIVE"1
@@ -92,7 +166,7 @@ setup() {
     fi
 
     echo 'Setting up LVM'
-    setup_lvm "$lvm_part" vg00
+    setup_lvm "$lvm_part" arch
 
     echo 'Formatting filesystems'
     format_filesystems "$boot_dev"
@@ -210,10 +284,10 @@ partition_drive() {
 
     # 100 MB /boot partition, everything else under LVM
     parted -s "$dev" \
-        mklabel msdos \
-        mkpart primary ext2 1 100M \
-        mkpart primary ext2 100M 100% \
-        set 1 boot on \
+        mklabel gpt \
+        mkpart primary ext2 1MiB 512MiB \
+        mkpart primary ext2 512MiB 100% \
+        set 1 esp on \
         set 2 LVM on
 }
 
@@ -236,8 +310,11 @@ setup_lvm() {
     # Create a 1GB swap partition
     lvcreate -C y -L1G "$volgroup" -n swap
 
-    # Use the rest of the space for root
-    lvcreate -l '+100%FREE' "$volgroup" -n root
+    # Create a 30GiB root partition
+    lvcreate -l 30GiB "$volgroup" -n root
+
+    # Use the rest of the space for home
+    lvcreate -l '+100%FREE' "$volgroup" -n home
 
     # Enable the new volumes
     vgchange -ay
@@ -246,22 +323,28 @@ setup_lvm() {
 format_filesystems() {
     local boot_dev="$1"; shift
 
-    mkfs.ext2 -L boot "$boot_dev"
-    mkfs.ext4 -L root /dev/vg00/root
-    mkswap /dev/vg00/swap
+    mkfs.fat -F 32 -L efi "$boot_dev"
+    mkfs.btrfs -L root /dev/arch/root
+    mkfs.btrfs -L home /dev/arch/home
+    mkswap /dev/arch/swap
 }
 
 mount_filesystems() {
     local boot_dev="$1"; shift
 
-    mount /dev/vg00/root /mnt
+    mount /dev/arch/root /mnt
+    mount /dev/arch/home /home
+
     mkdir /mnt/boot
     mount "$boot_dev" /mnt/boot
-    swapon /dev/vg00/swap
+    swapon /dev/arch/swap
 }
 
 install_base() {
-    echo 'Server = http://mirrors.kernel.org/archlinux/$repo/os/$arch' >> /etc/pacman.d/mirrorlist
+#    echo 'Server = http://mirrors.kernel.org/archlinux/$repo/os/$arch' >> /etc/pacman.d/mirrorlist
+    pacman -Sy --noconfirm reflector
+
+    reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 
     pacstrap /mnt base base-devel
     pacstrap /mnt syslinux
@@ -270,7 +353,8 @@ install_base() {
 unmount_filesystems() {
     umount /mnt/boot
     umount /mnt
-    swapoff /dev/vg00/swap
+    umount /home
+    swapoff /dev/arch/swap
     vgchange -an
     if [ -n "$ENCRYPT_DRIVE" ]
     then
@@ -333,6 +417,10 @@ install_packages() {
     then
         packages+=' xf86-video-vesa'
     fi
+
+    pacman -Sy --noconfirm reflector
+
+    reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 
     pacman -Sy --noconfirm $packages
 }
@@ -410,10 +498,11 @@ set_fstab() {
 #
 # <file system> <dir>    <type> <options>    <dump> <pass>
 
-/dev/vg00/swap none swap  sw                0 0
-/dev/vg00/root /    ext4  defaults,relatime 0 1
+/dev/arch/swap none swap  sw                0 0
+/dev/arch/home /    btrfs  defaults,relatime 0 2
+/dev/arch/root /    btrfs  defaults,relatime 0 1
 
-UUID=$boot_uuid /boot ext2 defaults,relatime 0 2
+UUID=$boot_uuid /boot vfat defaults,relatime 0 2
 EOF
 }
 
@@ -450,7 +539,7 @@ set_initcpio() {
 # run.  Advanced users may wish to specify all system modules
 # in this array.  For instance:
 #     MODULES="piix ide_disk reiserfs"
-MODULES="ext4 $vid"
+MODULES="btrfs ext4 $vid"
 
 # BINARIES
 # This setting includes any additional binaries a given user may
@@ -524,7 +613,7 @@ EOF
 set_daemons() {
     local tmp_on_tmpfs="$1"; shift
 
-    systemctl enable cronie.service cpupower.service ntpd.service slim.service
+    systemctl enable cronie.service cpupower.service ntpd.service lightdm.service
 
     if [ -n "$WIRELESS_DEVICE" ]
     then
@@ -606,13 +695,13 @@ MENU COLOR tabmsg       31;40   #30ffffff #00000000 std
 LABEL arch
 	MENU LABEL Arch Linux
 	LINUX ../vmlinuz-linux
-	APPEND root=/dev/vg00/root ro $crypt resume=/dev/vg00/swap quiet
+	APPEND root=/dev/arch/root ro $crypt resume=/dev/arch/swap quiet
 	INITRD ../initramfs-linux.img
 
 LABEL archfallback
 	MENU LABEL Arch Linux Fallback
 	LINUX ../vmlinuz-linux
-	APPEND root=/dev/vg00/root ro $crypt resume=/dev/vg00/swap
+	APPEND root=/dev/arch/root ro $crypt resume=/dev/arch/swap
 	INITRD ../initramfs-linux-fallback.img
 
 LABEL hdt
