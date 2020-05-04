@@ -39,7 +39,7 @@
 ## ALSO LOOK AT THE install_packages FUNCTION TO SEE WHAT IS ACTUALLY INSTALLED
 
 # Drive to install to (leave blank to be prompted).
-DRIVE=''
+DRIVE='/dev/sda'
 
 # Hostname of the installed machine (leave blank to be prompted).
 HOSTNAME=''
